@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Support Zone</title>
+
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+  <!-- React-Toastify (Must load after React/ReactDOM) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/react-toastify/dist/ReactToastify.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/react-toastify/dist/ReactToastify.min.js"></script>
+
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#f9f9f9; }
+    .navbar { display:flex; justify-content:space-between; align-items:center; padding:15px 30px; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+    .navbar .logo { font-weight:bold; font-size:18px;}
+    .navbar .menu { display:flex; gap:20px; align-items:center; }
+    .navbar button { padding:8px 15px; background:#6366f1; border:none; color:#fff; border-radius:6px; cursor:pointer;}
+    .banner { display:flex; justify-content:center; gap:20px; padding:30px; background:linear-gradient(135deg,#7f00ff,#00ff88); color:#fff;}
+    .stat { flex:1; text-align:center; padding:20px; border-radius:10px; background:rgba(255,255,255,0.1);}
+    .main { display:grid; grid-template-columns:2fr 1fr; gap:20px; padding:20px;}
+    .tickets, .task-status { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .ticket-card { border:1px solid #ddd; border-radius:8px; padding:10px; margin-bottom:12px; cursor:pointer; }
+    .ticket-card h4 { margin:0 0 5px; }
+    .task-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:10px 0; }
+    .footer { background:#111; color:#ccc; padding:30px; margin-top:20px; display:grid; grid-template-columns: repeat(4,1fr); gap:20px; font-size:14px;}
+    .footer h4 { color:#fff; margin-bottom:10px;}
+    @media(max-width:768px){
+      .main{ grid-template-columns:1fr; }
+      .footer{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+    const { ToastContainer, toast } = window.ReactToastify;
+
+    const initialTickets = [
+      { id:1, title:"Login Issue", description:"Cannot access account.", customer:"John", priority:"High", createdAt:"09/10/2024" },
+      { id:2, title:"Payment Failed", description:"Card declined.", customer:"Sarah", priority:"High", createdAt:"09/12/2024" },
+      { id:3, title:"Download Invoice Error", description:"Cannot download invoice.", customer:"Michael", priority:"Medium", createdAt:"09/15/2024" }
+    ];
+
+    function App() {
+      const [tickets, setTickets] = useState(initialTickets);
+      const [inProgress, setInProgress] = useState([]);
+      const [resolved, setResolved] = useState([]);
+
+      const addToProgress = (ticket) => {
+        if(!inProgress.find(t=>t.id===ticket.id)){
+          setInProgress([...inProgress, ticket]);
+          toast.info(`${ticket.title} moved to In-Progress`);
+        }
+      };
+
+      const markResolved = (ticket) => {
+        setInProgress(inProgress.filter(t=>t.id!==ticket.id));
+        setResolved([...resolved, ticket]);
+        setTickets(tickets.filter(t=>t.id!==ticket.id));
+        toast.success(`${ticket.title} marked as Resolved`);
+      };
+
+      const addNewTicket = () => {
+        const newTicket = {
+          id: Date.now(),
+          title: "New Ticket",
+          description: "Description here",
+          customer: "Guest",
+          priority: "Low",
+          createdAt: new Date().toLocaleDateString()
+        };
+        setTickets([newTicket, ...tickets]);
+        toast.success("New ticket added");
+      };
+
+      return (
+        <>
+          <div className="navbar">
+            <div className="logo">CS — Ticket System</div>
+            <div className="menu">
+              <a href="#">Home</a>
+              <a href="#">FAQ</a>
+              <a href="#">Contact</a>
+              <button onClick={addNewTicket}>+ New Ticket</button>
+            </div>
+          </div>
+
+          <div className="banner">
+            <div className="stat"><h2>{inProgress.length}</h2><p>In-Progress</p></div>
+            <div className="stat"><h2>{resolved.length}</h2><p>Resolved</p></div>
+          </div>
+
+          <div className="main">
+            <div className="tickets">
+              <h3>Customer Tickets</h3>
+              {tickets.map(ticket=>(
+                <div key={ticket.id} className="ticket-card" onClick={()=>addToProgress(ticket)}>
+                  <h4>{ticket.title}</h4>
+                  <p>{ticket.description}</p>
+                  <small>{ticket.customer} | {ticket.priority} | {ticket.createdAt}</small>
+                </div>
+              ))}
+            </div>
+
+            <div className="task-status">
+              <h3>In Progress</h3>
+              {inProgress.length===0 ? <p>No tasks in progress</p> :
+                inProgress.map(ticket=>(
+                  <div key={ticket.id} className="task-item">
+                    <span>{ticket.title}</span>
+                    <button onClick={()=>markResolved(ticket)}>Complete</button>
+                  </div>
+                ))
+              }
+
+              <h3>Resolved</h3>
+              {resolved.length===0 ? <p>No resolved tasks</p> :
+                resolved.map(ticket=>(
+                  <div key={ticket.id} className="task-item">
+                    <span>{ticket.title}</span>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+
+          <div className="footer">
+            <div>
+              <h4>CS — Ticket System</h4>
+              <p>Simple support dashboard.</p>
+            </div>
+            <div>
+              <h4>Company</h4>
+              <p>About Us</p>
+              <p>Contact</p>
+            </div>
+            <div>
+              <h4>Services</h4>
+              <p>Support</p>
+            </div>
+            <div>
+              <h4>Info</h4>
+              <p>Privacy Policy</p>
+              <p>Terms</p>
+            </div>
+          </div>
+
+          <ToastContainer />
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
